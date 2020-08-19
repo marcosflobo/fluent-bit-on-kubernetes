@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluent-bit
+  labels:
+    app: fluent-bit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fluent-bit
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+    spec:
+#      imagePullSecrets:
+#        - name: your-secret
+      containers:
+        - name: fluent-bit
+          image: fluent/fluent-bit:1.5
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 2020
+              protocol: TCP
+            - name: tcp
+              containerPort: 5170
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: config
+              mountPath: /fluent-bit/etc/fluent-bit.conf
+              subPath: fluent-bit.conf
+            - name: config
+              mountPath: /fluent-bit/etc/custom_parsers.conf
+              subPath: custom_parsers.conf
+      volumes:
+        - name: config
+          configMap:
+            name: fluent-bit
